@@ -1,8 +1,10 @@
 {
     "name": "cfr-wmd/charge-logic-connect",
-    "autoload": {
-        "classmap" : [
-            "ChargeLogicConnect.php"
-        ]
-    }
+    "version": "1.0.0",
+    "type": "library",
+	"autoload": {
+		"classmap": [
+		"ChargeLogicConnect.php"
+		]
+	}
 }
