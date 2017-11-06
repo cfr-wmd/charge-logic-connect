@@ -1,12 +1,7 @@
 <?php
-
-use SoapClient;
-
 define('BASEURL', 'https://transact.chargelogic.com/');
 define('DEBUG', 0);
 define('LOCALPROXY', 0);
-
-
 class ConnectStream { 
     private $path; 
     private $mode; 
@@ -86,7 +81,6 @@ class ConnectStream {
         $this->pos = 0; 
     } 
 }
-
 class ConnectSoapClient extends SoapClient { 
     protected static $userpwd;
     static function GetUserPwd()
@@ -130,12 +124,10 @@ class ConnectSoapClient extends SoapClient {
         $response = trim(curl_exec($ch));        
         return $response;
     }
-
     function __getLastRequestHeaders() { 
         return implode("\n", $this->__last_request_headers)."\n"; 
     } 
 }
-
 class ConnectClient
 {
     protected $actionbase;
@@ -151,7 +143,7 @@ class ConnectClient
         if ($this->existed) {
             stream_wrapper_unregister("https");
         }
-        stream_wrapper_register('https', 'Drupal\cfr_chargelogic\ConnectStream') or die("Failed to register protocol");
+        stream_wrapper_register('https', 'ConnectStream') or die("Failed to register protocol");
         $this->actionbase = "urn:microsoft-dynamics-schemas/codeunit/EFT_API_2:";
         $this->options = array(
         'trace'         => 1,
@@ -183,7 +175,6 @@ class ConnectClient
         {
             throw new Exception($result->faultstring);
         }
-
     }
     public function CheckVerify($creds, $demand, $trans, $ident, $billing, &$response)
     {
@@ -445,7 +436,6 @@ class ConnectClient
         $result = $client->FinalizeOrder($params);
     }
 }
-
 class ConnectCredential
 {
     private $StoreNo;
@@ -804,6 +794,4 @@ class ConnectResponse
         }
     }
 }
-
-
 ?>
