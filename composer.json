@@ -1,0 +1,8 @@
+{
+    "name": "cfr-wmd/charge-logic-connect",
+    "autoload": {
+        "classmap" : [
+            "ChargeLogicConnect.php"
+        ]
+    }
+}
