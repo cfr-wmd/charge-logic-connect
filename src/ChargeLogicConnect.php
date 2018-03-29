@@ -1,7 +1,9 @@
 <?php
-define('BASEURL', 'https://transact.chargelogic.com/');
+define('BASEURL', 'https://transact.chargelogic.net/');
 define('DEBUG', 0);
 define('LOCALPROXY', 0);
+
+
 class ConnectStream { 
     private $path; 
     private $mode; 
@@ -66,7 +68,7 @@ class ConnectStream {
         $this->ch = curl_init($path); 
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true); 
         curl_setopt($this->ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1); 
-        curl_setopt($this->ch, CURLOPT_HTTPAUTH, CURLAUTH_NTLM); 
+        curl_setopt($this->ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC); 
         curl_setopt($this->ch, CURLOPT_USERPWD, ConnectSoapClient::GetUserPwd());
         
         if (DEBUG == 1) {
@@ -81,6 +83,7 @@ class ConnectStream {
         $this->pos = 0; 
     } 
 }
+
 class ConnectSoapClient extends SoapClient { 
     protected static $userpwd;
     static function GetUserPwd()
@@ -89,7 +92,7 @@ class ConnectSoapClient extends SoapClient {
     }
     function __construct($URL, $options, $StoreNo, $APIKey)
     {
-        self::$userpwd = "CHARGELOGIC\\".$StoreNo.":".$APIKey;
+        self::$userpwd = $StoreNo.":".$APIKey;
         parent::__construct($URL, $options);
     }
     function __doRequest($request, $location, $action, $version, $one_way = 0) {
@@ -100,7 +103,6 @@ class ConnectSoapClient extends SoapClient {
             'Content-Type: text/xml; charset=utf-8', 
             'SOAPAction: "'.$action.'"',
         );
-        $domain = 'CHARGELOGIC';
         
         $location = BASEURL;
         $this->__last_request_headers = $headers; 
@@ -111,7 +113,7 @@ class ConnectSoapClient extends SoapClient {
         $request = str_replace('</ns1:', '</', str_replace('<ns1:', '<', $request));
         curl_setopt($ch, CURLOPT_POSTFIELDS, $request); 
         curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1); 
-        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_NTLM); 
+        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC); 
         curl_setopt($ch, CURLOPT_USERPWD, self::$userpwd);
         if (DEBUG == 1) {
             curl_setopt($ch, CURLOPT_CAINFO, realpath('./cacert.crt'));
@@ -124,10 +126,12 @@ class ConnectSoapClient extends SoapClient {
         $response = trim(curl_exec($ch));        
         return $response;
     }
+
     function __getLastRequestHeaders() { 
         return implode("\n", $this->__last_request_headers)."\n"; 
     } 
 }
+
 class ConnectClient
 {
     protected $actionbase;
@@ -175,6 +179,7 @@ class ConnectClient
         {
             throw new Exception($result->faultstring);
         }
+
     }
     public function CheckVerify($creds, $demand, $trans, $ident, $billing, &$response)
     {
@@ -436,6 +441,7 @@ class ConnectClient
         $result = $client->FinalizeOrder($params);
     }
 }
+
 class ConnectCredential
 {
     private $StoreNo;
@@ -488,6 +494,26 @@ class ConnectExtraData
 {
     private $Name;
     private $Value;
+    public function __get($property)
+    {
+        if (property_exists($this, $property)) {
+            return $this->$property;
+        }
+    }
+    public function __set($property, $value) {
+        if (property_exists($this, $property)) {
+            $this->$property = $value;
+        }
+        return $this;
+    }
+    public function toArray()
+    {
+        return get_object_vars($this);
+    }
+}
+class ConnectComment
+{
+    private $CommentLine;
     public function __get($property)
     {
         if (property_exists($this, $property)) {
@@ -727,6 +753,7 @@ class ConnectHostedPayment
     private $WebPaymentTransactionID;
     private $WebPaymentAmount;
     private $ExtraDataField = array();
+	private $Comment = array();
     public function addExtraData($extradata)
     {
         array_push($this->ExtraDataField, $extradata->toArray());
@@ -736,6 +763,17 @@ class ConnectHostedPayment
         foreach ($arrextradata as $extradata)
         {
             $this->addExtraData($extradata);
+        }
+    }
+    public function addComment($comment)
+    {
+        array_push($this->Comment, $comment->toArray());
+    }
+    public function addCommentArray($arrcomment)
+    {
+        foreach ($arrcomment as $comment)
+        {
+            $this->addComment($comment);
         }
     }
     public function __get($property)
@@ -794,4 +832,6 @@ class ConnectResponse
         }
     }
 }
+
+
 ?>
